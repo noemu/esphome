@@ -43,6 +43,11 @@ void MQTTClientComponent::setup() {
     this->state_ = MQTT_CLIENT_DISCONNECTED;
     this->disconnect_reason_ = reason;
   });
+
+  this->mqtt_client_.onPublish([this](uint16_t packetId){ 
+    this->on_publish_subscriptions_[packetId].call();
+  });
+
 #ifdef USE_LOGGER
   if (this->is_log_message_enabled() && logger::global_logger != nullptr) {
     logger::global_logger->add_on_log_callback([this](int level, const char *tag, const char *message) {
@@ -378,12 +383,12 @@ void MQTTClientComponent::unsubscribe(const std::string &topic) {
 }
 
 // Publish
-bool MQTTClientComponent::publish(const std::string &topic, const std::string &payload, uint8_t qos, bool retain) {
+bool MQTTClientComponent::publish(const std::string &topic, const std::string &payload, uint8_t qos, bool retain, const CallbackManager<void()> on_publish_callbacks) {
   return this->publish(topic, payload.data(), payload.size(), qos, retain);
 }
 
 bool MQTTClientComponent::publish(const std::string &topic, const char *payload, size_t payload_length, uint8_t qos,
-                                  bool retain) {
+                                  bool retain, const CallbackManager<void()> on_publish_callbacks) {
   if (!this->is_connected()) {
     // critical components will re-transmit their messages
     return false;
@@ -394,6 +399,8 @@ bool MQTTClientComponent::publish(const std::string &topic, const char *payload,
   if (ret == 0 && !logging_topic && this->is_connected()) {
     delay(0);
     ret = this->mqtt_client_.publish(topic.c_str(), qos, retain, payload, payload_length);
+    if(ret != 0)
+      this->on_publish_subscriptions_[ret] = on_publish_callbacks;
     delay(0);
   }
 

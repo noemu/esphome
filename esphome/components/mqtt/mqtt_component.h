@@ -102,8 +102,9 @@ class MQTTComponent : public Component {
    *
    * @param topic The topic.
    * @param payload The payload.
+   * @param on_publish_callbacks Callbacks to call after payload was published
    */
-  bool publish(const std::string &topic, const std::string &payload);
+  bool publish(const std::string &topic, const std::string &payload, const CallbackManager<void()> &on_publish_callbacks = {});
 
   /** Construct and send a JSON MQTT message.
    *

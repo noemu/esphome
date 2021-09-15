@@ -7,6 +7,7 @@
 #include "esphome/components/json/json_util.h"
 #include <AsyncMqttClient.h>
 #include "lwip/ip_addr.h"
+#include <map>
 
 namespace esphome {
 namespace mqtt {
@@ -180,10 +181,10 @@ class MQTTClientComponent : public Component {
    * @param payload The payload.
    * @param retain Whether to retain the message.
    */
-  bool publish(const std::string &topic, const std::string &payload, uint8_t qos = 0, bool retain = false);
+  bool publish(const std::string &topic, const std::string &payload, uint8_t qos = 0, bool retain = false, const CallbackManager<void()> on_publish_callbacks = {});
 
   bool publish(const std::string &topic, const char *payload, size_t payload_length, uint8_t qos = 0,
-               bool retain = false);
+               bool retain = false, const CallbackManager<void()> on_publish_callbacks = {});
 
   /** Construct and send a JSON MQTT message.
    *
@@ -263,6 +264,7 @@ class MQTTClientComponent : public Component {
   int log_level_{ESPHOME_LOG_LEVEL};
 
   std::vector<MQTTSubscription> subscriptions_;
+  std::map<uint16_t,CallbackManager<void()>> on_publish_subscriptions_;
   AsyncMqttClient mqtt_client_;
   MQTTClientState state_{MQTT_CLIENT_DISCONNECTED};
   IPAddress ip_;

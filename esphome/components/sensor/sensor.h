@@ -126,6 +126,9 @@ class Sensor : public Nameable {
   /// Add a callback that will be called every time the sensor sends a raw value.
   void add_on_raw_state_callback(std::function<void(float)> &&callback);
 
+  /// Add a callback that will be called every time the sensor value was received by the mqtt broker.
+  void add_on_publish_callback(std::function<void()> &&callback);
+
   /** This member variable stores the last state that has passed through all filters.
    *
    * On startup, when no state is available yet, this is NAN (not-a-number) and the validity
@@ -143,6 +146,9 @@ class Sensor : public Nameable {
 
   /// Return whether this sensor has gotten a full state (that passed through all filters) yet.
   bool has_state() const;
+
+  /// Getter-syntax for .published_callback_
+  CallbackManager<void()> get_published_callbacks();
 
   /** A unique ID for this sensor, empty for no unique id. See unique ID requirements:
    * https://developers.home-assistant.io/docs/en/entity_registry_index.html#unique-id-requirements
@@ -173,6 +179,7 @@ class Sensor : public Nameable {
 
   CallbackManager<void(float)> raw_callback_;  ///< Storage for raw state callbacks.
   CallbackManager<void(float)> callback_;      ///< Storage for filtered state callbacks.
+  CallbackManager<void()> published_callback_; ///< Storage for onPublish callbacks.
 
   bool has_state_{false};
   Filter *filter_list_{nullptr};  ///< Store all active filters.

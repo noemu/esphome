@@ -34,10 +34,10 @@ const std::string MQTTComponent::get_command_topic_() const {
   return this->custom_command_topic_;
 }
 
-bool MQTTComponent::publish(const std::string &topic, const std::string &payload) {
+bool MQTTComponent::publish(const std::string &topic, const std::string &payload, const CallbackManager<void()> &on_publish_callbacks) {
   if (topic.empty())
     return false;
-  return global_mqtt_client->publish(topic, payload, 0, this->retain_);
+  return global_mqtt_client->publish(topic, payload, 0, this->retain_, on_publish_callbacks);
 }
 
 bool MQTTComponent::publish_json(const std::string &topic, const json::json_build_t &f) {

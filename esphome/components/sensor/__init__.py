@@ -17,6 +17,7 @@ from esphome.const import (
     CONF_ICON,
     CONF_ID,
     CONF_INTERNAL,
+    CONF_ON_PUBLISH,
     CONF_ON_RAW_VALUE,
     CONF_ON_VALUE,
     CONF_ON_VALUE_RANGE,
@@ -150,6 +151,9 @@ SensorRawStateTrigger = sensor_ns.class_(
 ValueRangeTrigger = sensor_ns.class_(
     "ValueRangeTrigger", automation.Trigger.template(cg.float_), cg.Component
 )
+SensorOnPublishTrigger = sensor_ns.class_(
+    "SensorOnPublishTrigger", automation.Trigger.template()
+)
 SensorPublishAction = sensor_ns.class_("SensorPublishAction", automation.Action)
 
 # Filters
@@ -216,6 +220,11 @@ SENSOR_SCHEMA = cv.NAMEABLE_SCHEMA.extend(cv.MQTT_COMPONENT_SCHEMA).extend(
                 cv.Optional(CONF_BELOW): cv.float_,
             },
             cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
+        ),
+        cv.Optional(CONF_ON_PUBLISH): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SensorOnPublishTrigger),
+            }
         ),
     }
 )

@@ -7,6 +7,13 @@
 namespace esphome {
 namespace sensor {
 
+class OnPublishTrigger : public Trigger<> {
+ public:
+  explicit OnPublishTrigger(Sensor *parent) {
+    parent->add_on_publish_callback([this]() { this->trigger(); });
+  }
+};
+
 class SensorStateTrigger : public Trigger<float> {
  public:
   explicit SensorStateTrigger(Sensor *parent) {

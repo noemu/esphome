@@ -81,6 +81,8 @@ void Sensor::add_on_raw_state_callback(std::function<void(float)> &&callback) {
   this->raw_callback_.add(std::move(callback));
 }
 
+void Sensor::add_on_publish_callback(std::function<void()> &&callback) { this->published_callback_.add(std::move(callback)); }
+
 void Sensor::add_filter(Filter *filter) {
   // inefficient, but only happens once on every sensor setup and nobody's going to have massive amounts of
   // filters
@@ -123,6 +125,8 @@ void Sensor::internal_send_state_to_frontend(float state) {
 }
 bool Sensor::has_state() const { return this->has_state_; }
 uint32_t Sensor::hash_base() { return 2455723294UL; }
+
+CallbackManager<void ()> Sensor::get_published_callbacks(){ return this->published_callback_;}
 
 }  // namespace sensor
 }  // namespace esphome

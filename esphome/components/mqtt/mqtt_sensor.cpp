@@ -69,7 +69,8 @@ bool MQTTSensorComponent::send_initial_state() {
 bool MQTTSensorComponent::is_internal() { return this->sensor_->is_internal(); }
 bool MQTTSensorComponent::publish_state(float value) {
   int8_t accuracy = this->sensor_->get_accuracy_decimals();
-  return this->publish(this->get_state_topic_(), value_accuracy_to_string(value, accuracy));
+  auto on_publish_callbacks = this->sensor_->get_published_callbacks();
+  return this->publish(this->get_state_topic_(), value_accuracy_to_string(value, accuracy), on_publish_callbacks);
 }
 std::string MQTTSensorComponent::unique_id() { return this->sensor_->unique_id(); }
 
