@@ -44,8 +44,18 @@ void MQTTClientComponent::setup() {
     this->disconnect_reason_ = reason;
   });
 
-  this->mqtt_client_.onPublish([this](uint16_t packetId){ 
-    this->on_publish_subscriptions_[packetId].call();
+  this->mqtt_client_.onPublish([this](uint16_t packetId) {
+    ESP_LOGV(TAG, "Packet id %d successfully published", packetId);
+
+#ifdef ARDUINO_ARCH_ESP8266
+    // on ESP8266, this is called in LWiP thread; some components (e.g. deep sleep) do not like running
+    // in an ISR.
+    this->defer([this, packetId]() {
+#endif
+      this->on_publish_subscriptions_[packetId].call();
+#ifdef ARDUINO_ARCH_ESP8266
+    });
+#endif
   });
 
 #ifdef USE_LOGGER
@@ -384,7 +394,7 @@ void MQTTClientComponent::unsubscribe(const std::string &topic) {
 
 // Publish
 bool MQTTClientComponent::publish(const std::string &topic, const std::string &payload, uint8_t qos, bool retain, const CallbackManager<void()> on_publish_callbacks) {
-  return this->publish(topic, payload.data(), payload.size(), qos, retain);
+  return this->publish(topic, payload.data(), payload.size(), qos, retain, on_publish_callbacks);
 }
 
 bool MQTTClientComponent::publish(const std::string &topic, const char *payload, size_t payload_length, uint8_t qos,
@@ -395,12 +405,15 @@ bool MQTTClientComponent::publish(const std::string &topic, const char *payload,
   }
   bool logging_topic = topic == this->log_message_.topic;
   uint16_t ret = this->mqtt_client_.publish(topic.c_str(), qos, retain, payload, payload_length);
+  if (ret > 1)
+    this->on_publish_subscriptions_[ret] = std::move(on_publish_callbacks);
+
   delay(0);
   if (ret == 0 && !logging_topic && this->is_connected()) {
     delay(0);
     ret = this->mqtt_client_.publish(topic.c_str(), qos, retain, payload, payload_length);
-    if(ret != 0)
-      this->on_publish_subscriptions_[ret] = on_publish_callbacks;
+    if (ret > 1)
+      this->on_publish_subscriptions_[ret] = std::move(on_publish_callbacks);
     delay(0);
   }
 

@@ -541,6 +541,9 @@ async def setup_sensor_core_(var, config):
             template_ = await cg.templatable(conf[CONF_BELOW], [(float, "x")], float)
             cg.add(trigger.set_max(template_))
         await automation.build_automation(trigger, [(float, "x")], conf)
+    for conf in config.get(CONF_ON_PUBLISH, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)
 
     if CONF_MQTT_ID in config:
         mqtt_ = cg.new_Pvariable(config[CONF_MQTT_ID], var)
